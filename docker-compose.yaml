@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+	example-service:
+		build: .
+		volumes:
+			- .:/home/node/app
+			- /home/node/app/node_modules
+			ports:
+				- 8080:8080
+				- 9229:9229
+				command: npm start
