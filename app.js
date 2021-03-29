@@ -1,6 +1,6 @@
-const PORT = (process.env.DEVELOPMENT == 'yes' ? 3000 : 80);
+const PORT = 3000;
 const http = require('http');
-const session = require('express-session');
+//const session = require('express-session');
 
 const express = require('express');
 const render = require('template-literals-express');
@@ -8,24 +8,12 @@ const WebSocket = require('ws');
 const app = express();
 
 
-const sessionParser = session({
-	saveUninitialized: false,
-	secret: 'mysecret',
-	resave: false
-});
-
 app.use(express.static('public'));
-app.use(sessionParser);
 app.use(render({ root: 'views' }));
 
 app.get('/', function (req, res) {
 	res.rendel('minichat', {})
 	})
-	
-	app.post('/login', function (req, res){
-		req.session.token = 'TOKEN';
-		res.send({ result: 'OK', message: 'session updated' });
-	});
 	
 	
 const server = http.createServer(app);
@@ -34,28 +22,12 @@ const server = http.createServer(app);
 
 const wss = new WebSocket.Server({ clientTracking: true, noServer: true});
 
-
-
-
-// обработка входящих соединений
-server.on('upgrade', function (req, socket, head ) {
-	sessionParser(req, {}, function () {
-		// token is hardcoded here
-		if(req.session.token != "TOKEN") {
-			socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-			socket.destroy();
-			return;
-		}
-		wss.handleUpgrade( req, socket, head, function (ws) {
-			wss.emit( 'connection', ws, req );
-		});
-	});
-}); 
 // вещать для всех
 function broadcast(obj){
 wss.clients.forEach( function (client) {
 	 if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(obj));}
+      client.send(JSON.stringify(obj));
+      }
 
 })	
 }
@@ -77,7 +49,7 @@ function heartbeat () {
 
 
 wss.on('connection', function ( ws, req ) {
-console.log( "websock client opened!", req.url, req.session.token);
+console.log( "websock client opened!", req.url);
 
 ws.isAlive = true;
 ws.on( 'pong' , heartbeat);
@@ -85,24 +57,24 @@ ws.on( 'pong' , heartbeat);
  ws.on('message', function sock_msg(msg) {
 	console.log('json:', msg );
 	
-	var message;
+	let message;
+	let send_to_clients = false;
 	try {
 		message = JSON.parse( msg );
 	}catch( error ) {
 		console.log( error );
 		return;
 	};
-	if(message.type == "msg") {
-		broadcast({type: 'msg', msg: message.msg, from: ws.name});
-		}else if(message.type == "username") {
+	if(message.token == "token") send_to_clients = true;
+	if(message.type == "username") {
 			ws.name = message.name;
-			broadcast({ type: "join", from: ws.name  })
+			broadcast({ type: "join", from: ws.name  });
+			send_to_clients = false;
 			}
-
+if(send_to_clients) broadcast(msg);
 
 ws.on('close', function ( ) {
 console.log( "websocket closed" ); 
-
 broadcast ({type: "leave", from: ws.name})
 });
 });

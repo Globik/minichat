@@ -1,2 +1,2 @@
 # minichat
-minichat on nodejs and socketio
+minichat on nodejs and ws.js

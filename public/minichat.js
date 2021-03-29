@@ -1,5 +1,6 @@
 var socket;
 var myUsername;
+var tokens;
 
 if(window.location.protocol === "https:"){
 new_uri = 'wss:';
@@ -15,7 +16,6 @@ function wsend(obj ) {
 let a;
 try{
 socket.send(JSON.stringify(obj));
-console.log("aha, sending some data");
 }catch(e){
 	console.log('err in stringify: ', e); 
 	}	
@@ -36,11 +36,11 @@ console.log( "websocket error ", e );
 }
 socket.onmessage = function( evt ) {
 	console.log(evt.data)
-	var t;
+	let t;
 	try{
 		t = JSON.parse(evt.data);
 		}catch(e) {
-			console.error("json parse err");
+			console.error("json parse error", e);
 			return;
 			}
 
@@ -50,7 +50,9 @@ if(t.type == "msg") {
 	insert_message({from: t.from, msg: "входит в чат."});
 	}else if(t.type == "leave") {
 	insert_message({from: t.from, msg: "выходит из чата"});		
-	}else{}
+	}else{
+		console.log("unknown type: ", t.type);
+		}
 }
 
 socket.onclose = function() {
@@ -72,36 +74,26 @@ if(!chatTxt.value)return;
 let d={};
 d.type = "msg";
 d.msg = chatTxt.value;
-
+d.tokens = tokens;
 d.from = myUsername;
 wsend(d);	
-
-if(el)el.className = "puls";
 chatTxt.value = "";
 }
 
 function send_name(el) {
 if(!nameUser.value) {
-	alert("заполни поле");
+	alert("Введите свое имя");
 	return;
 	}
-let data  = {}
-data.name = nameUser.value;
-myUsername = data.name;
-vax("post", "/login", data, on_send_name, on_send_name_error, el, false);
+tokens = tokenStr.value;
+myUsername = nameUser.value;
+open_socket();
 }
 
-function on_send_name_error( l, el) {
-	alert(l);
-	}
-function on_send_name(l, el) {
-	open_socket();
-	}
 	
 	
 function insert_message(obj) {
-	
-let m=document.createElement('div');
+let m = document.createElement('div');
 m.className = "chat-div";
 m.innerHTML ='<span class="chat-user">' + obj.from +': </span><span class="chat-message">' + obj.msg +'</span>';
 chatContainer.appendChild(m);
