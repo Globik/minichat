@@ -25,7 +25,8 @@ function open_socket() {
 	if( socket ) {
 		return;
 		}
-socket = new WebSocket(new_uri+'//'+loc3);
+		console.log(new_uri+'//'+loc3);
+socket = new WebSocket(new_uri+'//'+loc3+'/chat');
 
 socket.onopen = function () {
 

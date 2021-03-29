@@ -21,7 +21,7 @@ height: 200px;
 <h3>Mini chat</h3>
 <div>
 <div><label for="nameUser"><strong>Ваше имя, пожалуйста</strong></label>
-<input id="nameUser" type="text" placeholder="имя">
+<input id="nameUser" type="text" placeholder="имя" value="alik">
 </div>
 <div><label for="tokenStr"><strong></strong></label>
 <input type="text" id="tokenStr" value="token">

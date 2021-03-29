@@ -18,9 +18,12 @@ app.get('/', function (req, res) {
 	
 const server = http.createServer(app);
 
+server.listen(PORT, function() {
+	console.log( PORT );
+	});
 
 
-const wss = new WebSocket.Server({ clientTracking: true, noServer: true});
+const wss = new WebSocket.Server({ server: server, clientTracking: true});
 
 // вещать для всех
 function broadcast(obj){
@@ -58,20 +61,25 @@ ws.on( 'pong' , heartbeat);
 	console.log('json:', msg );
 	
 	let message;
-	let send_to_clients = false;
+	var send_to_clients = false;
 	try {
 		message = JSON.parse( msg );
 	}catch( error ) {
 		console.log( error );
 		return;
 	};
-	if(message.token == "token") send_to_clients = true;
+	if(message.tokens == "token") {
+		send_to_clients = true;
+		console.log("send_to_clients: ", send_to_clients);
+	}
 	if(message.type == "username") {
 			ws.name = message.name;
 			broadcast({ type: "join", from: ws.name  });
 			send_to_clients = false;
 			}
-if(send_to_clients) broadcast(msg);
+if(send_to_clients){
+	 broadcast(message);
+ }
 
 ws.on('close', function ( ) {
 console.log( "websocket closed" ); 
@@ -98,6 +106,3 @@ if( ws.readyState === WebSocket.OPEN ) ws.send(json_obj);
 	}	
 }
 	
-server.listen(PORT, function() {
-	console.log( PORT );
-	});
