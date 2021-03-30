@@ -10,4 +10,6 @@ COPY . .
 
 EXPOSE 8080
 
-CMD ["node", "app.js"]
+RUN npm install -g nodemon
+
+CMD ["npm", "start"]
